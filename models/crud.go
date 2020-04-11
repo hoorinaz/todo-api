@@ -56,16 +56,15 @@ func AddTodo(w http.ResponseWriter, r *http.Request) {
 	desc := params["desc"]
 	userId := params["userId"]
 	intUserId, _ := strconv.Atoi(userId)
-
 	db := Getdb()
 	defer db.Close()
-	db.Create(&Todo{
+	db.Table("todos").Create(&Todo{
 		Title:       title,
 		Description: desc,
 		IsDone:      true,
 		UserId:      intUserId,
 	})
-
+	fmt.Fprint(w, "Todo add susseccfully. named: ", title)
 }
 
 func ViewAll(w http.ResponseWriter, r *http.Request) {

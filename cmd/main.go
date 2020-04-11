@@ -23,8 +23,9 @@ func main() {
 	router.HandleFunc("/delete/{Id}", models.DeleteTodo).Methods("DELETE")
 	router.HandleFunc("/add/{title}/{desc}/{userId}", models.AddTodo).Methods("POST")
 	router.HandleFunc("/adduser/{username}/{email}", models.AddUser).Methods("POST")
+	router.HandleFunc("/signup", models.Signup).Methods("POST")
 	router.HandleFunc("/signin", models.Signin).Methods("POST")
-	router.HandleFunc("/login", models.Login).Methods("GET")
+	router.HandleFunc("/gettodo", models.GetTodo).Methods("POST")
 
 	fmt.Println("connect to db")
 	http.ListenAndServe(":8080", router)
