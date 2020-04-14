@@ -1,6 +1,7 @@
-package models
+package todo
 
 import (
+	"github.com/hoorinaz/TodoList/user"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -12,5 +13,6 @@ type Todo struct {
 	Description string    `json:"description"`
 	DueDate     time.Time `json:"due_date"`
 	IsDone      bool      `json:"is_done"`
-	UserId      int       `json:"user_id"`
+	User        user.User `gorm:"foreignkey:UserID"`
+	UserID      uint
 }
