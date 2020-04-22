@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hoorinaz/TodoList/models"
 	"github.com/hoorinaz/TodoList/shared/auth"
+	"github.com/hoorinaz/TodoList/shared/errorz"
 	"github.com/hoorinaz/TodoList/shared/store"
 	"golang.org/x/crypto/bcrypt"
 	"log"
@@ -15,7 +16,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		errorz.WriteHttpError(w, http.StatusBadRequest)
 		log.Println("Error: ", err)
 		return
 	}
@@ -25,9 +26,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 	hashPass, err := HashPassword(user.Password)
 	if err != nil {
-		fmt.Fprint(w, "password is clear!")
 		log.Println("Error in Password Hashing: ", err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		errorz.WriteHttpError(w, http.StatusBadRequest)
 		return
 	}
 
@@ -56,37 +56,33 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		fmt.Fprint(w, "Login Faild")
 		log.Println("Error: ", err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		errorz.WriteHttpError(w, http.StatusBadRequest, "Login Failed")
 		return
 	}
 	db := store.GetDB()
 	var dbUser models.User
 	err = db.Table("users").Where("user_name =?", user.UserName).First(&dbUser).Error
 	if err != nil {
-		fmt.Fprint(w, "something went wrong")
-		w.WriteHeader(http.StatusInternalServerError)
+		errorz.WriteHttpError(w, http.StatusInternalServerError, "something went wrong")
 		log.Println("there is problem to connect DB")
 		return
 
 	}
 	if dbUser.UserName == "" {
-		fmt.Fprint(w, "user not exist")
-		w.WriteHeader(http.StatusInternalServerError)
+		errorz.WriteHttpError(w, http.StatusInternalServerError, "user not found")
 		log.Println("the user does not exist in DB")
 		return
 	}
 	match := CheckPasswordHash(user.Password, dbUser.Password)
 	if match == false {
-		fmt.Fprint(w, "Incorrect Password")
-		w.WriteHeader(http.StatusBadRequest)
+		errorz.WriteHttpError(w, http.StatusUnauthorized, "incorrect password")
 		log.Println("Password is not match")
 		return
 	}
 	stringToken, err := auth.CreateToken(user.UserName, user.Email)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		errorz.WriteHttpError(w, http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}

@@ -5,6 +5,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/hoorinaz/TodoList/models"
 	"github.com/hoorinaz/TodoList/shared"
+	"github.com/hoorinaz/TodoList/shared/errorz"
 	"github.com/hoorinaz/TodoList/shared/store"
 	"log"
 	"net/http"
@@ -46,13 +47,13 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 		})
 		if err != nil {
 			log.Println("token is not valid ", err.Error())
-			w.WriteHeader(http.StatusUnauthorized)
+			errorz.WriteHttpError(w, http.StatusUnauthorized)
 
 			return
 		}
 		if !token.Valid {
 			log.Println("token is invalid ")
-			w.WriteHeader(http.StatusUnauthorized)
+			errorz.WriteHttpError(w, http.StatusUnauthorized)
 
 			return
 		} else {
@@ -60,7 +61,7 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 			db := store.GetDB()
 			if err = db.Table("users").Where("user_name =?", claims.Username).First(&dbUser).Error; err != nil {
 				log.Println("User Not Found ", err.Error())
-				w.WriteHeader(http.StatusUnauthorized)
+				errorz.WriteHttpError(w, http.StatusUnauthorized, "user not found")
 				return
 			}
 			uJson, err := json.Marshal(dbUser)
@@ -73,4 +74,15 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 
 	}
 
+}
+
+func GetUserformRequest(w http.ResponseWriter) models.User {
+
+	u := []byte(w.Header().Get(shared.UserFieldInHttpHeader))
+	user := models.User{}
+	if err := json.Unmarshal(u, &user); err != nil {
+		log.Println("error in un marshaling is: ", err.Error())
+		errorz.WriteHttpError(w, http.StatusInternalServerError)
+		return user
+	}
 }
