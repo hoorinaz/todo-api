@@ -1,120 +1,105 @@
-package models
+package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/hoorinaz/TodoList/models"
+	"github.com/hoorinaz/TodoList/shared/store"
 	"log"
 	"net/http"
 	"time"
-
-	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 )
 
-type Account struct {
-	gorm.Model
-	UserName     string
-	Email        string
-	Password     string
-	IsRegistered bool
-	Token        string
-}
-
-func AddUser(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	username := params["username"]
-	email := params["email"]
-
-	db := Getdb()
-	db.Create(&Account{
-		UserName:     username,
-		Email:        email,
-		Password:     "1234",
-		IsRegistered: false,
-	})
-	fmt.Fprint(w, "add account")
-}
-
-var jwtkey = []byte("my_Secret_Key")
-
-type loginInfo struct {
-	Password string `json:"password"`
-	UserName string `json:"username"`
-}
-
-type claims struct {
+type Claims struct {
 	Username string
+	Email    string
 	jwt.StandardClaims
 }
 
-var users = map[string]string{
-	"Hoori": "123",
-	"Amir":  "456",
-}
+var (
+	JwtKey          = []byte("The_Secret_Key")
+	unauthorizedErr = errors.New("Unauthorizaed")
+)
+var expTime = time.Now().Add(24 * time.Hour)
 
-func Signin(w http.ResponseWriter, r *http.Request) {
-
-	var login loginInfo
-	err := json.NewDecoder(r.Body).Decode(&login)
-	if err != nil {
-
-		w.WriteHeader(http.StatusBadRequest)
-	}
-
-	pass, ok := users[login.UserName]
-
-	if !ok || pass != login.Password {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Println(ok)
-		return
-	}
-
-	expTime := time.Now().Add(5 * time.Minute)
-
-	claims := claims{
-		Username: login.UserName,
+func CreateToken(username string, email string) (string, error) {
+	claims := Claims{
+		Username: username,
+		Email:    email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expTime.Unix(),
 		},
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	stringToken, err := token.SignedString(jwtkey)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Println(err)
-	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     "JWTToken",
-		Value:    stringToken,
-		Expires:  expTime,
-		HttpOnly: true,
-	})
+	stringToken, err := token.SignedString(JwtKey)
+	return stringToken, err
 }
 
-func Welcome(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("JWTToken")
+func Athorization(tokenString string) (*models.User, error) {
 
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	var tknString = cookie.Value
-	claims := &claims{}
-
-	token, err := jwt.ParseWithClaims(tknString, claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtkey, nil
+	claims := &Claims{}
+	//claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (i interface{}, err error) {
+		return JwtKey, nil
 	})
-	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
-			w.WriteHeader(http.StatusUnauthorized)
-		}
-		log.Println(err)
-		return
-	}
 
-	fmt.Println(token)
-	fmt.Fprint(w, "Welcome ", claims.Username)
+	if err != nil {
+		fmt.Println("token is not valid", err.Error())
+		return nil, err
+	}
+	if !token.Valid {
+		fmt.Println("token is invalid")
+		return nil, err
+	}
+	u := &models.User{
+		UserName: claims.Username,
+	}
+	return u, err
+}
+
+func Middleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, err := jwtValidation(r)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			db := store.GetDB()
+			var dbUser models.User
+			if err := db.Table(" ").Where("user_name =?", u.UserName).First(&dbUser).Error; err != nil {
+				log.Println(err.Error())
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			uJson, err := json.Marshal(&dbUser)
+			if err != nil {
+				log.Println("error marshalling user information", err.Error())
+				return
+			}
+			r.Header.Set("user", string(uJson))
+			next(w, r)
+		}
+	}
+}
+
+func jwtValidation(r *http.Request) (*models.User, error) {
+	claims := &Claims{}
+	tokenString := r.Header.Get("Authorization")
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (i interface{}, err error) {
+		return JwtKey, nil
+	})
+
+	if err != nil {
+		log.Println("token is not valid ", err.Error())
+		return nil, unauthorizedErr
+	}
+	if !token.Valid {
+		log.Println("token is invalid")
+		return nil, unauthorizedErr
+	}
+	u := &models.User{
+		UserName: claims.Username,
+	}
+	return u, nil
 }
