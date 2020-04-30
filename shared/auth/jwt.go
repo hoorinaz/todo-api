@@ -83,6 +83,6 @@ func GetUserformRequest(w http.ResponseWriter) models.User {
 	if err := json.Unmarshal(u, &user); err != nil {
 		log.Println("error in un marshaling is: ", err.Error())
 		errorz.WriteHttpError(w, http.StatusInternalServerError)
-		return user
 	}
+		return user
 }

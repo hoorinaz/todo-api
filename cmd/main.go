@@ -20,11 +20,11 @@ func main() {
 	db.Model(&models.Todo{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 
 	router := mux.NewRouter()
-	router.HandleFunc("/todo/", auth.Middleware(todo.ViewAll)).Methods("GET")
+	router.HandleFunc("/todo/add", auth.Middleware(todo.AddTodo)).Methods("POST")
 	router.HandleFunc("/todo/view/{id}", auth.Middleware(todo.ViewTodo)).Methods("GET")
 	router.HandleFunc("/todo/edit/{id}", auth.Middleware(todo.EditTodo)).Methods("PATCH")
 	router.HandleFunc("/todo/delete/{Id}", auth.Middleware(todo.DeleteTodo)).Methods("DELETE")
-	router.HandleFunc("/todo/add", auth.Middleware(todo.AddTodo)).Methods("POST")
+	router.HandleFunc("/todo", auth.Middleware(todo.ViewAll)).Methods("GET")
 	router.HandleFunc("/todo/list", auth.Middleware(todo.GetTodo)).Methods("GET")
 	router.HandleFunc("/register", user.Register).Methods("POST")
 	router.HandleFunc("/authenticate", user.Authenticate).Methods("POST")

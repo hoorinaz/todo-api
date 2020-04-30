@@ -16,10 +16,20 @@ import (
 func ViewTodo(w http.ResponseWriter, r *http.Request) {
 	var todo models.Todo
 	params := mux.Vars(r)
-	Id := params["id"]
+	id := params["id"]
 	db := store.GetDB()
-	db.First(&todo, Id)
-	fmt.Println("FOUND: ", todo)
+	user:=auth.GetUserformRequest(w)
+
+	if err:= db.Table("todos").Where("Id =?",id).First(&todo).Error; err!=nil{
+		log.Printf("connection error is: %v", err.Error())
+		errorz.WriteHttpError(w, http.StatusInternalServerError,  "connection error")
+		return
+	}
+	if user.ID!=todo.UserID{
+		errorz.WriteHttpError(w, http.StatusUnauthorized, "you dont have enough permission")
+		return
+	}
+
 	json.NewEncoder(w).Encode(todo)
 	err := db.Close()
 	if err != nil {
@@ -54,7 +64,7 @@ func EditTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if dbTodo.UserID != user.ID {
-		errorz.WriteHttpError(w, http.StatusUnauthorized, "unauthorized!")
+		errorz.WriteHttpError(w, http.StatusUnauthorized, "you dont have enough permission")
 		return
 	}
 
@@ -142,7 +152,7 @@ func GetTodo(w http.ResponseWriter, r *http.Request) {
 	var todos []models.Todo
 	db := store.GetDB()
 	var dbAccount models.User
-	db.Table("accounts").Where("user_name =?", user.UserName).First(&dbAccount)
+	db.Table("users").Where("user_name =?", user.UserName).First(&dbAccount)
 	db.Table("todos").Where("user_id =?", dbAccount.ID).Find(&todos)
 	fmt.Fprint(w, todos)
 	err := db.Close()

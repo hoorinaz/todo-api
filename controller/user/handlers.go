@@ -16,8 +16,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		errorz.WriteHttpError(w, http.StatusBadRequest)
-		log.Println("Error: ", err)
+		errorz.WriteHttpError(w, http.StatusBadRequest, "Bad Request")
+		log.Println("Json Decode error is : ", err)
 		return
 	}
 	if len(user.Password) < 6 {
@@ -56,8 +56,8 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		log.Println("Error: ", err.Error())
-		errorz.WriteHttpError(w, http.StatusBadRequest, "Login Failed")
+		log.Println("Json Decode Error is: ", err.Error())
+		errorz.WriteHttpError(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
 	db := store.GetDB()
@@ -65,19 +65,19 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	err = db.Table("users").Where("user_name =?", user.UserName).First(&dbUser).Error
 	if err != nil {
 		errorz.WriteHttpError(w, http.StatusInternalServerError, "something went wrong")
-		log.Println("there is problem to connect DB")
+		log.Println("there is problem to connect DB", err.Error())
 		return
 
+	}
+	match := CheckPasswordHash(user.Password, dbUser.Password)
+	if match == false{
+		errorz.WriteHttpError(w, http.StatusUnauthorized, "incorrect password")
+		log.Println("Password is not match")
+		return
 	}
 	if dbUser.UserName == "" {
 		errorz.WriteHttpError(w, http.StatusInternalServerError, "user not found")
 		log.Println("the user does not exist in DB")
-		return
-	}
-	match := CheckPasswordHash(user.Password, dbUser.Password)
-	if match == false {
-		errorz.WriteHttpError(w, http.StatusUnauthorized, "incorrect password")
-		log.Println("Password is not match")
 		return
 	}
 	stringToken, err := auth.CreateToken(user.UserName, user.Email)
