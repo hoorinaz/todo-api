@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS account.users
     username        VARCHAR(100),
     email           VARCHAR(100),
     password        VARCHAR,
-    created_at      TIMESTAMP DEFAULT now(),
+    created_at      TIMESTAMP DEFAULT  now(),
     updated_at      TIMESTAMP DEFAULT now()
 );
 

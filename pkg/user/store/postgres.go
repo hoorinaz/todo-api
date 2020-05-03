@@ -3,7 +3,10 @@ package store
 import (
 	"github.com/gocraft/dbr/v2"
 	"github.com/hoorinaz/TodoList/pkg/user"
+	"github.com/hoorinaz/TodoList/shared/store"
+	_ "github.com/lib/pq"
 	"log"
+	"time"
 )
 
 const (
@@ -20,16 +23,20 @@ var columns = []string{
 	"updated_at",
 }
 
-type UserService struct {
-	db     *dbr.Session
-	logger log.Logger
-}
+type (
+	prepareData func(*user.User)
+	UserStore   struct {
+		DB             *dbr.Session
+		PrepareAddData prepareData
+	}
+)
 
-func (us *UserService) AddUser(u *user.User) error {
-	if _, err := us.db.
+func (us *UserStore) AddUser(u *user.User) error {
+	us.PrepareAddData(u)
+	if _, err := us.DB.
 		NewSession(nil).
 		InsertInto(tableName).
-		Columns(columns...).
+		Columns(columns[1:]...).
 		Record(u).
 		Exec(); err != nil {
 		return err
@@ -38,8 +45,8 @@ func (us *UserService) AddUser(u *user.User) error {
 	return nil
 }
 
-func (us *UserService) GetUser(u *user.User) error {
-	selectStmt := us.db.NewSession(nil).
+func (us *UserStore) GetUser(u *user.User) error {
+	selectStmt := us.DB.NewSession(nil).
 		Select(columns...).
 		From(tableName)
 
@@ -50,7 +57,7 @@ func (us *UserService) GetUser(u *user.User) error {
 	}
 
 	if err := selectStmt.LoadOne(u); err != nil {
-		us.logger.Println(loggerName,
+		log.Println(loggerName,
 			"error selecting from users table ",
 			"error: ",
 			err.Error(),
@@ -58,13 +65,22 @@ func (us *UserService) GetUser(u *user.User) error {
 
 		return err
 	}
-
 	return nil
 }
 
-func NewUserService(s *dbr.Session) user.UserService {
-	return &UserService{
-		db:     s,
-		logger: log.Logger{},
+func (us *UserStore) Close() error {
+	return us.DB.Close()
+}
+
+func NewUserStore() user.UserService {
+	s := store.NewDB()
+
+	return &UserStore{
+		DB: s,
+		PrepareAddData: func(u *user.User) {
+			now := time.Now()
+			u.CreatedAt = now
+			u.UpdatedAt = now
+		},
 	}
 }
