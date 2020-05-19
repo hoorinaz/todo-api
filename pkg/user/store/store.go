@@ -3,7 +3,7 @@ package store
 import (
 	"fmt"
 	"github.com/hoorinaz/TodoList/pkg/user"
-	"github.com/hoorinaz/TodoList/shared/store"
+	"github.com/hoorinaz/TodoList/shared/connection"
 	"github.com/jinzhu/gorm"
 	"log"
 )
@@ -15,12 +15,11 @@ type UserStore struct {
 
 const(
 	tableName="users"
-	logger="user-store-GetUser"
+	logger="user-connection-GetUser"
 )
 func(us UserStore) AddUser (u *user.User)error{
 
 db:= us.DB
-fmt.Printf("username: %v , password : %v , email: %v ", u.Username , u.Password , u.Email )
  db.Create(&user.User{
 	Username: u.Username,
 	Email: u.Email,
@@ -32,17 +31,20 @@ fmt.Printf("username: %v , password : %v , email: %v ", u.Username , u.Password 
 
 func (us UserStore) GetUser (u *user.User)error{
 	db:= us.DB
-	err:= db.Table("users").Where("user_name=?",u.Username).Error
+	var dbUser user.User
+	err:= db.Table("users").Where("username=?",u.Username).First(&dbUser).Error
 	if err!=nil{
 		log.Println(logger,"there is problem to GetUser ",err.Error())
 	}
+	fmt.Printf("username: %v , password : %v , email: %v ", dbUser.Username , dbUser.Password , dbUser.Email )
+
 	return nil
 }
 
 func NewUserStore () user.UserService{
 
-	//path: shared.store
-	s := store.GetDB()
+	//path: shared.connection
+	s := connection.GetDB()
 	return UserStore{
 		DB: s,
 	}

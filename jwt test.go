@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/hoorinaz/TodoList/models"
-	"github.com/hoorinaz/TodoList/shared/store"
+	"github.com/hoorinaz/TodoList/old/models"
+	"github.com/hoorinaz/TodoList/shared/connection"
 	"log"
 	"net/http"
 	"time"
@@ -65,7 +65,7 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
-			db := store.GetDB()
+			db := connection.GetDB()
 			var dbUser models.User
 			if err := db.Table(" ").Where("user_name =?", u.UserName).First(&dbUser).Error; err != nil {
 				log.Println(err.Error())

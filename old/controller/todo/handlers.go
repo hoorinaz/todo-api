@@ -4,20 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/hoorinaz/TodoList/models"
+	"github.com/hoorinaz/TodoList/old/models"
 	"github.com/hoorinaz/TodoList/shared/auth"
+	"github.com/hoorinaz/TodoList/shared/connection"
 	"github.com/hoorinaz/TodoList/shared/errorz"
-	"github.com/hoorinaz/TodoList/shared/store"
 	"log"
 	"net/http"
 )
 
-// id
+// id~
 func ViewTodo(w http.ResponseWriter, r *http.Request) {
 	var todo models.Todo
 	params := mux.Vars(r)
 	id := params["id"]
-	db := store.GetDB()
+	db := connection.GetDB()
 	user:=auth.GetUserformRequest(w)
 
 	if err:= db.Table("todos").Where("Id =?",id).First(&todo).Error; err!=nil{
@@ -50,7 +50,7 @@ func EditTodo(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
 	dbTodo := models.Todo{}
-	db := store.GetDB()
+	db := connection.GetDB()
 	err = db.Table("todos").Where("Id =?", id).Find(&dbTodo).Error
 	if err != nil {
 		log.Printf("problme found to get todo with %v. error: %v", id, err.Error())
@@ -87,7 +87,7 @@ func DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	var todo models.Todo
 	params := mux.Vars(r)
 	Id := params["Id"]
-	db := store.GetDB()
+	db := connection.GetDB()
 	if res := db.Table("todos").Where("Id =?", Id).Find(&todo); res.Error != nil {
 		fmt.Fprintf(w, "connection problem")
 		errorz.WriteHttpError(w, http.StatusInternalServerError)
@@ -120,7 +120,7 @@ func AddTodo(w http.ResponseWriter, r *http.Request) {
 		errorz.WriteHttpError(w, http.StatusBadRequest)
 		return
 	}
-	db := store.GetDB()
+	db := connection.GetDB()
 	db.Table("todos").Create(&models.Todo{
 		Title:       todo.Title,
 		Description: todo.Description,
@@ -137,7 +137,7 @@ func AddTodo(w http.ResponseWriter, r *http.Request) {
 func ViewAll(w http.ResponseWriter, r *http.Request) {
 
 	var allTodo []models.Todo
-	db := store.GetDB()
+	db := connection.GetDB()
 	db.Find(&allTodo)
 	fmt.Fprint(w, allTodo)
 	err := db.Close()
@@ -150,7 +150,7 @@ func GetTodo(w http.ResponseWriter, r *http.Request) {
 
 	user := auth.GetUserformRequest(w)
 	var todos []models.Todo
-	db := store.GetDB()
+	db := connection.GetDB()
 	var dbAccount models.User
 	db.Table("users").Where("user_name =?", user.UserName).First(&dbAccount)
 	db.Table("todos").Where("user_id =?", dbAccount.ID).Find(&todos)

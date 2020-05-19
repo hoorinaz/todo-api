@@ -3,10 +3,10 @@ package auth
 import (
 	"encoding/json"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/hoorinaz/TodoList/models"
+	"github.com/hoorinaz/TodoList/old/models"
 	"github.com/hoorinaz/TodoList/shared"
+	"github.com/hoorinaz/TodoList/shared/connection"
 	"github.com/hoorinaz/TodoList/shared/errorz"
-	"github.com/hoorinaz/TodoList/shared/store"
 	"log"
 	"net/http"
 	"time"
@@ -58,7 +58,7 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		} else {
 			dbUser := models.User{}
-			db := store.GetDB()
+			db := connection.GetDB()
 			if err = db.Table("users").Where("user_name =?", claims.Username).First(&dbUser).Error; err != nil {
 				log.Println("User Not Found ", err.Error())
 				errorz.WriteHttpError(w, http.StatusUnauthorized, "user not found")

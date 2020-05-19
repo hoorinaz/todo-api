@@ -3,10 +3,10 @@ package user
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/hoorinaz/TodoList/models"
+	"github.com/hoorinaz/TodoList/old/models"
 	"github.com/hoorinaz/TodoList/shared/auth"
+	"github.com/hoorinaz/TodoList/shared/connection"
 	"github.com/hoorinaz/TodoList/shared/errorz"
-	"github.com/hoorinaz/TodoList/shared/store"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
@@ -31,7 +31,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := store.GetDB()
+	db := connection.GetDB()
 	db.Create(&models.User{
 		UserName:     user.UserName,
 		Email:        user.Email,
@@ -60,7 +60,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		errorz.WriteHttpError(w, http.StatusBadRequest, "Bad Request")
 		return
 	}
-	db := store.GetDB()
+	db := connection.GetDB()
 	var dbUser models.User
 	err = db.Table("users").Where("user_name =?", user.UserName).First(&dbUser).Error
 	if err != nil {
