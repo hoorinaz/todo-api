@@ -1,44 +1,64 @@
 package jwt
 
 import (
-	jwt2 "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 	"log"
-	"net/http"
 	"time"
 )
 
-var Key = []byte("The_Secret_Key")
-type Claims struct {
-	Username string
-	Email    string
-	jwt2.StandardClaims
+type(
+	Data struct {
+		Username string
+		Email string
+
+	}
+	claims struct {
+		Data
+		jwt.StandardClaims
+	}
+
+
+)
+
+func (jp jwtProvider) GenerateTime() time.Time{
+
+	return time.Now().Add(time.Hour * 6)
 }
 
-func (cl Claims) GenerateToken()(string , error){
 
-	token := jwt2.NewWithClaims(jwt2.SigningMethodHS256, cl)
-	stringToken, err := token.SignedString(Key)
+func (jp jwtProvider) GenerateToken( d Data)(string , error){
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims{
+		Data: d,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: jp.expirationDate.Unix(),
+		},
+	})
+	stringToken, err := token.SignedString(jp.signKey)
 	return stringToken, err
 }
-func(cl Claims) SetToken(w http.ResponseWriter)  {
-	stringToken, err:= cl.GenerateToken()
-	if err!=nil{
-		log.Println("Generate Token Failed! error: ", err.Error())
-		return
-	}
-	w.Header().Set("Authorization", stringToken)
 
+
+func(jp jwtProvider) DecodeToken(tokenStr string)(Data , error)  {
+	c:=claims{}
+	token, err:= jwt.ParseWithClaims(tokenStr,&c,func(token *jwt.Token) (interface{}, error) {
+		return jp.signKey, nil
+	})
+	if err!=nil{
+		log.Println("decode token has error")
+		return Data{} ,  err
+	}
+	if !token.Valid{
+		log.Println("token is invalid")
+		return Data{}  , ErrTokenInvalid
+	}
+	return c.Data, nil
 }
 
 
-func NewJwtProvider(username string, email string) JwtProvider{
-	expTime:= time.Now().Add(6 *time.Hour)
-		return Claims{
-		Username: username,
-		Email:    email,
-		StandardClaims : jwt2.StandardClaims{
-			ExpiresAt: expTime.Unix(),
-
-		},
+func NewJwtProvider() JwtProvider{
+	return jwtProvider{
+		signKey: []byte("hoorieNazari"),
+		expirationDate: time.Now().Add(time.Hour * 6) ,
 	}
 }

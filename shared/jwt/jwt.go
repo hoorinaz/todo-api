@@ -1,11 +1,15 @@
 package jwt
 
-import "net/http"
+import (
+	"time"
+)
 
 type jwtProvider struct {
+	signKey []byte
+	expirationDate time.Time
 }
 
 type JwtProvider interface {
-	GenerateToken() (string, error)
-	DecodeToken(w http.ResponseWriter)
+	GenerateToken(d Data) (string, error)
+	DecodeToken(tokenstr string) (Data, error)
 }
