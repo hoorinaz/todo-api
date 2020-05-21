@@ -1,6 +1,9 @@
 package user
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type User struct {
 	ID        int64
@@ -12,6 +15,6 @@ type User struct {
 }
 
 type UserService interface {
-	AddUser(*User) error
-	GetUser(*User) error
+	AddUser(context.Context, *User) error
+	GetUser(context.Context, *User) error
 }

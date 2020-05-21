@@ -1,12 +1,14 @@
 package store
 
 import (
+	"context"
+	"log"
+	"time"
+
 	"github.com/gocraft/dbr/v2"
 	"github.com/hoorinaz/TodoList/pkg/user"
 	"github.com/hoorinaz/TodoList/shared/store"
 	_ "github.com/lib/pq"
-	"log"
-	"time"
 )
 
 const (
@@ -31,7 +33,7 @@ type (
 	}
 )
 
-func (us *UserStore) AddUser(u *user.User) error {
+func (us *UserStore) AddUser(ctx context.Context, u *user.User) error {
 	us.PrepareAddData(u)
 	if _, err := us.DB.
 		NewSession(nil).
@@ -45,7 +47,7 @@ func (us *UserStore) AddUser(u *user.User) error {
 	return nil
 }
 
-func (us *UserStore) GetUser(u *user.User) error {
+func (us *UserStore) GetUser(ctx context.Context, u *user.User) error {
 	selectStmt := us.DB.NewSession(nil).
 		Select(columns...).
 		From(tableName)

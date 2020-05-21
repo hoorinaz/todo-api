@@ -16,6 +16,11 @@ func NewDB() DB {
 		log.Println("error connection db", err.Error())
 		panic(err)
 	}
+
+	if err := conn.Ping(); err != nil {
+		panic(err)
+	}
+
 	session := conn.NewSession(nil)
 
 	return session
