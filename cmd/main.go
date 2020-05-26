@@ -2,16 +2,18 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/hoorinaz/TodoList/pkg/todo"
 	todoWeb "github.com/hoorinaz/TodoList/pkg/todo/web"
-	userWeb"github.com/hoorinaz/TodoList/pkg/user/web"
+	userWeb "github.com/hoorinaz/TodoList/pkg/user/web"
 
 	//"github.com/hoorinaz/TodoList/controller/user"
 	//"github.com/hoorinaz/TodoList/models"
 	"github.com/hoorinaz/TodoList/pkg/user"
 
-	"github.com/hoorinaz/TodoList/shared/connection"
 	"net/http"
+
+	"github.com/hoorinaz/TodoList/shared/connection"
 
 	"github.com/gorilla/mux"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -38,5 +40,6 @@ func main() {
 	//router.HandleFunc("/register", user.Register).Methods("POST")
 
 	fmt.Println("connect to db")
+
 	http.ListenAndServe(":8080", router)
 }
