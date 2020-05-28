@@ -1,10 +1,12 @@
 package store
 
 import (
+	"context"
+	"log"
+
 	"github.com/hoorinaz/TodoList/pkg/todo"
 	"github.com/hoorinaz/TodoList/shared/connection"
 	"github.com/jinzhu/gorm"
-	"log"
 )
 
 type TodoStore struct {
@@ -12,29 +14,40 @@ type TodoStore struct {
 }
 
 const logger = "todo-store"
-func(ts TodoStore) AddTodo(td todo.Todo)  error{
-	db:=ts.DB
-	createTodo:= db.Create(&todo.Todo{
-		Title: td.Title,
-		Description:td.Description,
 
+func (ts TodoStore) AddTodo(ctx context.Context, td todo.Todo) error {
+	db := ts.DB
+
+	db.Create(&todo.Todo{
+		Title:       td.Title,
+		Description: td.Description,
+		UserID:      td.UserID,
 	})
-if createTodo.Error!=nil{
-	log.Println(logger,"there is an error to connection: ", createTodo.Error)
 	return nil
-	}
-db.Create(&todo.Todo{
-		Title: td.Title,
-		Description:td.Description,
-		UserID: 5,
-
-	})
-return nil
 }
 
-func NewTodoStore() todo.TodoService{
+func (ts TodoStore) ViewTodo(ctx context.Context, todo *todo.Todo) error {
+	db := ts.DB
+	if err := db.Table("todos").Where("Id=?", todo.ID).First(&todo).Error; err != nil {
+		log.Println(logger, "there is problem to get todo, error: ", err.Error())
+		return err
+	}
+	return nil
+}
 
-	s:= connection.GetDB()
+func (ts TodoStore) EditTodo(ctx context.Context, todo *todo.Todo) error {
+	db := ts.DB
+	if err := db.Table("todos").Where("Id=?", todo.ID).Update(&todo).Error; err != nil {
+		log.Println(logger, "todo is not found", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func NewTodoStore() todo.TodoService {
+
+	s := connection.GetDB()
 	return TodoStore{
 		DB: s,
 	}

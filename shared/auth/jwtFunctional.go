@@ -2,14 +2,15 @@ package auth
 
 import (
 	"encoding/json"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/hoorinaz/TodoList/old/models"
 	"github.com/hoorinaz/TodoList/shared"
 	"github.com/hoorinaz/TodoList/shared/connection"
 	"github.com/hoorinaz/TodoList/shared/errorz"
-	"log"
-	"net/http"
-	"time"
 )
 
 type Claims struct {
@@ -84,5 +85,5 @@ func GetUserformRequest(w http.ResponseWriter) models.User {
 		log.Println("error in un marshaling is: ", err.Error())
 		errorz.WriteHttpError(w, http.StatusInternalServerError)
 	}
-		return user
+	return user
 }

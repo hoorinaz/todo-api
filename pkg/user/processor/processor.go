@@ -1,42 +1,45 @@
 package processor
 
 import (
-	"github.com/hoorinaz/TodoList/pkg/user"
-	"golang.org/x/crypto/bcrypt"
+	"context"
 	"log"
+
+	"github.com/hoorinaz/TodoList/pkg/user"
+	"github.com/hoorinaz/TodoList/pkg/user/store"
+	"golang.org/x/crypto/bcrypt"
 )
 
-const logger ="user-process"
+const logger = "user-process"
 
 type UserProcessor struct {
-
 	UserStore user.UserService
 }
 
-func (up UserProcessor) AddUser(u *user.User) error{
+func (up UserProcessor) AddUser(ctx context.Context, u *user.User) error {
 
-	if len(u.Password ) < 6 {
-		//fmt.Fprint(w,"password is less than 6 character")
+	if len(u.Password) < 6 {
 		log.Println(logger, "password is less than 6 character")
 		return nil
 	}
 	hashPass, err := HashPassword(u.Password)
-	if err!=nil{
+	if err != nil {
 		log.Println(logger, "Error in Password Hashing: ", err.Error())
-		//errorz.WriteHttpError(w, http.StatusBadRequest)
 		return nil
 
 	}
-	u.Password=hashPass
-	return up.UserStore.AddUser(u)
+	u.Password = hashPass
+	return up.UserStore.AddUser(ctx, u)
 }
 
+func (up UserProcessor) GetUser(ctx context.Context, u *user.User) error {
 
-func(up UserProcessor) GetUser (u *user.User)error{
-	return up.UserStore.GetUser(u)
+	return up.UserStore.GetUser(ctx, u)
 }
 
-func NewUserProcessor (userStore user.UserService) user.UserService{
+func NewUserProcessor(userStore user.UserService) user.UserService {
+	if userStore == nil {
+		userStore = store.NewUserStore()
+	}
 	return UserProcessor{
 		UserStore: userStore,
 	}

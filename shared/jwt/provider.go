@@ -1,32 +1,29 @@
 package jwt
 
 import (
-	"github.com/dgrijalva/jwt-go"
 	"log"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
-type(
+type (
 	Data struct {
 		Username string
-		Email string
-
+		Email    string
 	}
 	claims struct {
 		Data
 		jwt.StandardClaims
 	}
-
-
 )
 
-func (jp jwtProvider) GenerateTime() time.Time{
+func (jp jwtProvider) GenerateTime() time.Time {
 
 	return time.Now().Add(time.Hour * 6)
 }
 
-
-func (jp jwtProvider) GenerateToken( d Data)(string , error){
+func (jp jwtProvider) GenerateToken(d Data) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims{
 		Data: d,
@@ -38,27 +35,25 @@ func (jp jwtProvider) GenerateToken( d Data)(string , error){
 	return stringToken, err
 }
 
-
-func(jp jwtProvider) DecodeToken(tokenStr string)(Data , error)  {
-	c:=claims{}
-	token, err:= jwt.ParseWithClaims(tokenStr,&c,func(token *jwt.Token) (interface{}, error) {
+func (jp jwtProvider) DecodeToken(tokenStr string) (Data, error) {
+	c := claims{}
+	token, err := jwt.ParseWithClaims(tokenStr, &c, func(token *jwt.Token) (interface{}, error) {
 		return jp.signKey, nil
 	})
-	if err!=nil{
+	if err != nil {
 		log.Println("decode token has error")
-		return Data{} ,  err
+		return Data{}, err
 	}
-	if !token.Valid{
+	if !token.Valid {
 		log.Println("token is invalid")
-		return Data{}  , ErrTokenInvalid
+		return Data{}, ErrTokenInvalid
 	}
 	return c.Data, nil
 }
 
-
-func NewJwtProvider() JwtProvider{
+func NewJwtProvider() JwtProvider {
 	return jwtProvider{
-		signKey: []byte("hoorieNazari"),
-		expirationDate: time.Now().Add(time.Hour * 6) ,
+		signKey:        []byte("hoorieNazari"),
+		expirationDate: time.Now().Add(time.Hour * 6),
 	}
 }
