@@ -1,7 +1,6 @@
 package userservice
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -17,11 +16,11 @@ type UserWebService struct {
 }
 
 type UserWebInterface interface {
-	Register(context.Context, *user.User) error
-	Authenticate(context.Context, *user.User) error
+	SignUp(w http.ResponseWriter, r *http.Request)
+	SignIn(w http.ResponseWriter, r *http.Request)
 }
 
-func (uws UserWebService) Register(w http.ResponseWriter, r *http.Request) {
+func (uws UserWebService) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	u := new(user.User)
@@ -32,7 +31,7 @@ func (uws UserWebService) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = uws.UserProcessor.SignUp(ctx, u); err != nil {
+	if err = uws.UserProcessor.Register(ctx, u); err != nil {
 		log.Println(logger, "error in processor layer", err.Error())
 		errorz.WriteHttpError(w, http.StatusInternalServerError)
 		return
@@ -40,7 +39,7 @@ func (uws UserWebService) Register(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (uws UserWebService) Authenticate(w http.ResponseWriter, r *http.Request) {
+func (uws UserWebService) SignIn(w http.ResponseWriter, r *http.Request) {
 	u := new(user.User)
 
 	err := json.NewDecoder(r.Body).Decode(u)
@@ -51,7 +50,7 @@ func (uws UserWebService) Authenticate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	err = uws.UserProcessor.SignIn(ctx, u)
+	err = uws.UserProcessor.Authenticate(ctx, u)
 	if err != nil {
 		log.Println(logger, "error in processor layer", err)
 		errorz.WriteHttpError(w, http.StatusInternalServerError)
@@ -60,7 +59,7 @@ func (uws UserWebService) Authenticate(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func NewUserWebService(userProcessor UserProcessorInterface) UserProcessorInterface {
+func NewUserWebService(userProcessor UserProcessorInterface) UserWebInterface {
 
 	return UserWebService{
 		UserProcessor: userProcessor,

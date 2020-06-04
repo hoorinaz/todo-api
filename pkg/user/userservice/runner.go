@@ -10,7 +10,6 @@ func RegisterUserService(r *mux.Router) {
 	UserProcessor := NewUserProcessor(userStore)
 	webService := NewUserWebService(UserProcessor)
 
-	r.HandleFunc("/authentication", webService.Authenticate).Methods("POST")
-	r.HandleFunc("/register", webService.Register).Methods("POST")
-
+	r.HandleFunc("/signin", webService.SignIn).Methods("POST")
+	r.HandleFunc("/signup", webService.SignUp).Methods("POST")
 }

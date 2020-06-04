@@ -18,11 +18,11 @@ type UserProcessor struct {
 }
 
 type UserProcessorInterface interface {
-	SignUp(context.Context, *user.User) error
-	SignIn(context.Context, *user.User) error
+	Register(context.Context, *user.User) error
+	Authenticate(context.Context, *user.User) error
 }
 
-func (up UserProcessor) SignUp(ctx context.Context, u *user.User) error {
+func (up UserProcessor) Register(ctx context.Context, u *user.User) error {
 
 	if len(u.Password) < 6 {
 		log.Println(logger, "password is less than 6 character")
@@ -38,7 +38,7 @@ func (up UserProcessor) SignUp(ctx context.Context, u *user.User) error {
 	return up.UserStore.AddUser(ctx, u)
 }
 
-func (up UserProcessor) SignIn(ctx context.Context, u *user.User) error {
+func (up UserProcessor) Authenticate(ctx context.Context, u *user.User) error {
 	dbUser := user.User{
 		Username: u.Username,
 	}
@@ -62,7 +62,6 @@ func (up UserProcessor) SignIn(ctx context.Context, u *user.User) error {
 		Username: u.Username,
 		Email:    u.Email,
 	}
-	log.Println(d)
 	tokenString, err := up.jwt.GenerateToken(d)
 	if err != nil {
 		log.Println(logger, "error in generate token")

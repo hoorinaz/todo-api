@@ -13,7 +13,7 @@ import (
 )
 
 type Authentication struct {
-	userProcessor userservice.UserProcessor
+	userProcessor userservice.UserProcessorInterface
 	jwtProvider   jwt2.JwtProvider
 }
 
@@ -32,7 +32,7 @@ func (auth *Authentication) Authenticate(next http.HandlerFunc) http.HandlerFunc
 		}
 		dbUser := user.User{}
 		dbUser.Username = data.Username
-		err = auth.userService.GetUser(ctx, &dbUser)
+		err = auth.userProcessor.Authenticate(ctx, &dbUser)
 		if err != nil {
 			log.Println("user not found", err)
 			errorz.WriteHttpError(w, http.StatusUnauthorized)
@@ -46,7 +46,7 @@ func (auth *Authentication) Authenticate(next http.HandlerFunc) http.HandlerFunc
 }
 func NewMiddleware() AuthenticationProvider {
 	return &Authentication{
-		jwtProvider: jwt2.NewJwtProvider(),
-		userService: processor.NewUserProcessor(nil),
+		jwtProvider:   jwt2.NewJwtProvider(),
+		userProcessor: userservice.NewUserProcessor(nil),
 	}
 }

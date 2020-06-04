@@ -14,13 +14,13 @@ type UserStore struct {
 }
 
 type UserStoreInterface interface {
-	AddUser(context.Context, *User) error
-	GetUser(context.Context, *User) error
+	AddUser(context.Context, *user.User) error
+	GetUser(context.Context, *user.User) error
 }
 
 const (
-	tableName = "users"
-	logger    = "user-connection-GetUser"
+	tableName   = "users"
+	loggerStore = "user-connection-GetUser"
 )
 
 func (us UserStore) AddUser(ctx context.Context, u *user.User) error {
