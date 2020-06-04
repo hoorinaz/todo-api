@@ -43,6 +43,26 @@ func (ts TodoStore) EditTodo(ctx context.Context, todo *todo.Todo) error {
 	}
 
 	return nil
+
+}
+
+func (ts TodoStore) ListTodo(ctx context.Context, todos *[]todo.Todo) error {
+	db := ts.DB
+	if err := db.Table("todos").Find(todos).Error; err != nil {
+		log.Println(logger, "todo is not found", err)
+		return err
+	}
+	return nil
+}
+
+func (ts TodoStore) DeleteTodo(ctx context.Context, todo *todo.Todo) error {
+	db := ts.DB
+	if err := db.Table("todos").Delete(&todo).Error; err != nil {
+		log.Println(logger, err.Error())
+		return err
+
+	}
+	return nil
 }
 
 func NewTodoStore() todo.TodoService {

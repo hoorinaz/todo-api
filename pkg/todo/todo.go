@@ -22,7 +22,6 @@ type TodoService interface {
 	AddTodo(ctx context.Context, todo Todo) error
 	ViewTodo(ctx context.Context, todo *Todo) error
 	EditTodo(ctx context.Context, todo *Todo) error
-	//DeleteTodo(todo Todo)error
-	//ListTodo(todo Todo)error
-
+	ListTodo(ctx context.Context, todos *[]Todo) error
+	DeleteTodo(ctx context.Context, todo *Todo) error
 }

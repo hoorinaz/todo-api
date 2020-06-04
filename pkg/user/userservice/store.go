@@ -1,4 +1,4 @@
-package store
+package userservice
 
 import (
 	"context"
@@ -11,6 +11,11 @@ import (
 
 type UserStore struct {
 	DB *gorm.DB
+}
+
+type UserStoreInterface interface {
+	AddUser(context.Context, *User) error
+	GetUser(context.Context, *User) error
 }
 
 const (
@@ -43,7 +48,7 @@ func (us UserStore) GetUser(ctx context.Context, u *user.User) error {
 	return nil
 }
 
-func NewUserStore() user.UserService {
+func NewUserStore() UserStoreInterface {
 
 	//path: shared.connection
 	s := connection.GetDB()

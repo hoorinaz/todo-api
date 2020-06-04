@@ -1,8 +1,6 @@
 package user
 
 import (
-	"context"
-
 	"github.com/jinzhu/gorm"
 )
 
@@ -15,7 +13,7 @@ type User struct {
 	Token        string
 }
 
-type UserService interface {
-	AddUser(context.Context, *User) error
-	GetUser(context.Context, *User) error
-}
+// type UserService interface {
+// 	AddUser(context.Context, *User) error
+// 	GetUser(context.Context, *User) error
+// }

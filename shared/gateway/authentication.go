@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/hoorinaz/TodoList/pkg/user"
-	"github.com/hoorinaz/TodoList/pkg/user/processor"
+	"github.com/hoorinaz/TodoList/pkg/user/userservice"
 	"github.com/hoorinaz/TodoList/shared"
 	"github.com/hoorinaz/TodoList/shared/errorz"
 	jwt2 "github.com/hoorinaz/TodoList/shared/jwt"
@@ -13,8 +13,8 @@ import (
 )
 
 type Authentication struct {
-	userService user.UserService
-	jwtProvider jwt2.JwtProvider
+	userProcessor userservice.UserProcessor
+	jwtProvider   jwt2.JwtProvider
 }
 
 type AuthenticationProvider interface {

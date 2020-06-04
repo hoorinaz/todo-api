@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/jinzhu/gorm"
+
 	"github.com/hoorinaz/TodoList/pkg/todo"
 	"github.com/hoorinaz/TodoList/shared"
 	"github.com/hoorinaz/TodoList/shared/errorz"
@@ -64,7 +66,7 @@ func (tws TodoWebService) ViewTodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (tws TodoWebService) EditTodo(w http.ResponseWriter, r *http.Request) {
-	var td *todo.Todo
+	td := &todo.Todo{}
 	userId := r.Header.Get(shared.UserFieldInHttpHeader)
 	err := json.NewDecoder(r.Body).Decode(&td)
 	if err != nil {
@@ -73,12 +75,15 @@ func (tws TodoWebService) EditTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	var dbTd *todo.Todo
+	dbTd := &todo.Todo{
+		Model: gorm.Model{ID: td.ID},
+	}
 	if err = tws.TodoProcessor.ViewTodo(ctx, dbTd); err != nil {
 		fmt.Println(logger, "get todo got error: ", err.Error())
 		return
 	}
-	if dbTd.ID == 0 || string(dbTd.UserID) != userId {
+	u32, err := strconv.ParseUint(userId, 10, 32)
+	if dbTd.ID == 0 || dbTd.UserID != uint(u32) {
 		fmt.Println(logger, "wrong todo or wrong user ")
 		errorz.WriteHttpError(w, http.StatusUnauthorized, "wrong todo or wrong user ")
 
@@ -89,6 +94,39 @@ func (tws TodoWebService) EditTodo(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(logger, "error in edit todo", err.Error())
 	}
 	fmt.Fprintf(w, "Todo %v has been changed successfully.", td.ID)
+
+}
+
+func (tws TodoWebService) ListTodo(w http.ResponseWriter, r *http.Request) {
+	todos := []todo.Todo{}
+	ctx := r.Context()
+	tws.TodoProcessor.ListTodo(ctx, &todos)
+	fmt.Fprint(w, todos)
+
+}
+
+func (tws TodoWebService) DeleteTodo(w http.ResponseWriter, r *http.Request) {
+	td := todo.Todo{}
+	err := json.NewDecoder(r.Body).Decode(&td)
+	if err != nil {
+		log.Println(logger, "bad request")
+		return
+	}
+	userId := r.Header.Get(shared.UserFieldInHttpHeader)
+	u32, err := strconv.ParseUint(userId, 10, 32)
+	ctx := r.Context()
+	dbTodo := todo.Todo{}
+	dbTodo.ID = td.ID
+	err = tws.TodoProcessor.ViewTodo(ctx, &dbTodo)
+	if uint(u32) != dbTodo.UserID || dbTodo.ID == 0 {
+		log.Println(logger, "wrog user or worng todo")
+		errorz.WriteHttpError(w, http.StatusUnauthorized)
+		return
+	}
+	if err = tws.TodoProcessor.DeleteTodo(ctx, &td); err != nil {
+		log.Println(logger, "there is an error in processor layer, ", err.Error())
+		return
+	}
 
 }
 

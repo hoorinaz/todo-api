@@ -5,7 +5,7 @@ import (
 
 	"github.com/hoorinaz/TodoList/pkg/todo"
 	todoWeb "github.com/hoorinaz/TodoList/pkg/todo/web"
-	userWeb "github.com/hoorinaz/TodoList/pkg/user/web"
+	"github.com/hoorinaz/TodoList/pkg/user/userservice"
 
 	//"github.com/hoorinaz/TodoList/controller/user"
 	//"github.com/hoorinaz/TodoList/models"
@@ -27,7 +27,7 @@ func main() {
 	db.Model(&todo.Todo{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 
 	router := mux.NewRouter()
-	userWeb.RegisterUserService(router)
+	userservice.RegisterUserService(router)
 	todoWeb.AddTodoService(router)
 
 	//router.HandleFunc("/todo/add", auth.Middleware(todo.AddTodo)).Methods("POST")
