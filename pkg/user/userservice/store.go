@@ -2,10 +2,11 @@ package userservice
 
 import (
 	"context"
+	"fmt"
 	"log"
 
-	"github.com/hoorinaz/TodoList/pkg/user"
-	"github.com/hoorinaz/TodoList/shared/connection"
+	"github.com/hoorinaz/todo-api/pkg/user"
+	"github.com/hoorinaz/todo-api/shared/connection"
 	"github.com/jinzhu/gorm"
 )
 
@@ -43,7 +44,8 @@ func (us UserStore) GetUser(ctx context.Context, u *user.User) error {
 		log.Println(logger, "there is problem to GetUser ", err.Error())
 		return err
 	}
-	// fmt.Printf("username: %v , password : %v , email: %v ", u.Username, u.Password, u.Email)
+	// fmt.Printf("username: %v , password : %v , email: %v form store GetUser ", u.Username, u.Password, u.Email)
+	fmt.Printf("password form store GetUser: ", u.Password)
 
 	return nil
 }

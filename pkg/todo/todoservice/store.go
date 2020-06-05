@@ -1,16 +1,23 @@
-package store
+package todoservice
 
 import (
 	"context"
 	"log"
 
-	"github.com/hoorinaz/TodoList/pkg/todo"
-	"github.com/hoorinaz/TodoList/shared/connection"
+	"github.com/hoorinaz/todo-api/pkg/todo"
+	"github.com/hoorinaz/todo-api/shared/connection"
 	"github.com/jinzhu/gorm"
 )
 
 type TodoStore struct {
 	DB *gorm.DB
+}
+type TodoStoreInterface interface {
+	AddTodo(ctx context.Context, todo todo.Todo) error
+	ViewTodo(ctx context.Context, todo *todo.Todo) error
+	EditTodo(ctx context.Context, todo *todo.Todo) error
+	ListTodo(ctx context.Context, todos *[]todo.Todo) error
+	DeleteTodo(ctx context.Context, todo *todo.Todo) error
 }
 
 const logger = "todo-store"
@@ -65,7 +72,7 @@ func (ts TodoStore) DeleteTodo(ctx context.Context, todo *todo.Todo) error {
 	return nil
 }
 
-func NewTodoStore() todo.TodoService {
+func NewTodoStore() TodoStoreInterface {
 
 	s := connection.GetDB()
 	return TodoStore{

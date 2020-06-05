@@ -1,4 +1,4 @@
-module github.com/hoorinaz/TodoList
+module github.com/hoorinaz/todo-api
 
 go 1.14
 

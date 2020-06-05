@@ -10,7 +10,6 @@ import (
 type (
 	Data struct {
 		Username string
-		Email    string
 	}
 	claims struct {
 		Data

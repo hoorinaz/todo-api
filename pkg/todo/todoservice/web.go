@@ -1,4 +1,4 @@
-package web
+package todoservice
 
 import (
 	"encoding/json"
@@ -9,15 +9,23 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/hoorinaz/TodoList/pkg/todo"
-	"github.com/hoorinaz/TodoList/shared"
-	"github.com/hoorinaz/TodoList/shared/errorz"
+	"github.com/hoorinaz/todo-api/pkg/todo"
+	"github.com/hoorinaz/todo-api/shared"
+	"github.com/hoorinaz/todo-api/shared/errorz"
 )
 
-const logger = "todo-web"
+const loggerW = "todo-web"
 
 type TodoWebService struct {
-	TodoProcessor todo.TodoService
+	TodoProcessor TodoServiceInterface
+}
+
+type TodoWebServiceInterface interface {
+	AddTodo(w http.ResponseWriter, r *http.Request)
+	ViewTodo(w http.ResponseWriter, r *http.Request)
+	EditTodo(w http.ResponseWriter, r *http.Request)
+	ListTodo(w http.ResponseWriter, r *http.Request)
+	DeleteTodo(w http.ResponseWriter, r *http.Request)
 }
 
 //title, description.....>json body
@@ -27,6 +35,8 @@ func (tws TodoWebService) AddTodo(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userId := r.Header.Get(shared.UserFieldInHttpHeader)
 
+	CtxuserId := ctx.Value(shared.UserInContext)
+	fmt.Println("second place  ", "userId from todo web layer ", CtxuserId)
 	u32, err := strconv.ParseUint(userId, 10, 32)
 	// if err != nil {
 	// 	log.Println(err)
@@ -99,8 +109,7 @@ func (tws TodoWebService) EditTodo(w http.ResponseWriter, r *http.Request) {
 
 func (tws TodoWebService) ListTodo(w http.ResponseWriter, r *http.Request) {
 	todos := []todo.Todo{}
-	ctx := r.Context()
-	tws.TodoProcessor.ListTodo(ctx, &todos)
+	tws.TodoProcessor.ListTodo(r.Context(), &todos)
 	fmt.Fprint(w, todos)
 
 }
@@ -130,7 +139,7 @@ func (tws TodoWebService) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func NewTodoWebService(todoProcessor todo.TodoService) TodoWebService {
+func NewTodoWebService(todoProcessor TodoServiceInterface) TodoWebServiceInterface {
 	return TodoWebService{
 		TodoProcessor: todoProcessor,
 	}

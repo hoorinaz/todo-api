@@ -2,11 +2,12 @@ package userservice
 
 import (
 	"context"
+	"fmt"
 	"log"
 
-	"github.com/hoorinaz/TodoList/shared/jwt"
+	"github.com/hoorinaz/todo-api/shared/jwt"
 
-	"github.com/hoorinaz/TodoList/pkg/user"
+	"github.com/hoorinaz/todo-api/pkg/user"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -44,30 +45,34 @@ func (up UserProcessor) Authenticate(ctx context.Context, u *user.User) error {
 	}
 
 	err := up.UserStore.GetUser(ctx, &dbUser)
+	fmt.Println("dbUser  form user processor, ", dbUser.Password)
+	fmt.Println("U  form user processor, ", u.Password)
+
 	if err != nil {
-		log.Println(logger, "error in store layer")
+		log.Println(logger, "error in store layer ", err.Error())
 		return err
 	}
 	if dbUser.Username == "" {
-		log.Println(logger, "user not foud")
+		log.Println(logger, "user not foud, ", err.Error())
 		return err // error 401 unauthorized
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(u.Password))
 	if err != nil {
-		log.Println("password is incorrect")
+		log.Println("password is incorrect: ", err.Error())
 		return err
 	}
 	d := jwt.Data{
 		Username: u.Username,
-		Email:    u.Email,
 	}
 	tokenString, err := up.jwt.GenerateToken(d)
 	if err != nil {
-		log.Println(logger, "error in generate token")
+		log.Println(logger, "error in generate token", err.Error())
 		return err
 	}
-	ctx = context.WithValue(ctx, "Authorization", tokenString)
+	u.Token = tokenString
+	// ctx = context.WithValue(ctx, "Authorization", tokenString)
+	log.Println("user processor set context: ", ctx.Value("Authorization"))
 
 	return nil
 }
