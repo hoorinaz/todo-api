@@ -13,8 +13,8 @@ type TodoStore struct {
 	DB *gorm.DB
 }
 type TodoStoreInterface interface {
-	AddTodo(ctx context.Context, todo todo.Todo) error
-	ViewTodo(ctx context.Context, todo *todo.Todo) error
+	AddTodo(ctx context.Context, todo *todo.Todo) error
+	GetTodo(ctx context.Context, todo *todo.Todo) error
 	EditTodo(ctx context.Context, todo *todo.Todo) error
 	ListTodo(ctx context.Context, todos *[]todo.Todo) error
 	DeleteTodo(ctx context.Context, todo *todo.Todo) error
@@ -22,7 +22,7 @@ type TodoStoreInterface interface {
 
 const logger = "todo-store"
 
-func (ts TodoStore) AddTodo(ctx context.Context, td todo.Todo) error {
+func (ts TodoStore) AddTodo(ctx context.Context, td *todo.Todo) error {
 	db := ts.DB
 
 	db.Create(&todo.Todo{
@@ -33,10 +33,10 @@ func (ts TodoStore) AddTodo(ctx context.Context, td todo.Todo) error {
 	return nil
 }
 
-func (ts TodoStore) ViewTodo(ctx context.Context, todo *todo.Todo) error {
+func (ts TodoStore) GetTodo(ctx context.Context, todo *todo.Todo) error {
 	db := ts.DB
 	if err := db.Table("todos").Where("Id=?", todo.ID).First(&todo).Error; err != nil {
-		log.Println(logger, "there is problem to get todo, error: ", err.Error())
+		log.Println(logger, "there is problem to get todo, error: ", todo.ID , " error= ", err.Error())
 		return err
 	}
 	return nil

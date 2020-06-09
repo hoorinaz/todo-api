@@ -2,7 +2,6 @@ package userservice
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/hoorinaz/todo-api/pkg/user"
@@ -38,14 +37,12 @@ func (us UserStore) AddUser(ctx context.Context, u *user.User) error {
 
 func (us UserStore) GetUser(ctx context.Context, u *user.User) error {
 	db := us.DB
-
 	err := db.Table("users").Where("username=?", u.Username).First(&u).Error
 	if err != nil {
 		log.Println(logger, "there is problem to GetUser ", err.Error())
 		return err
 	}
 	// fmt.Printf("username: %v , password : %v , email: %v form store GetUser ", u.Username, u.Password, u.Email)
-	fmt.Printf("password form store GetUser: ", u.Password)
 
 	return nil
 }

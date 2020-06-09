@@ -2,7 +2,6 @@ package userservice
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/hoorinaz/todo-api/shared/jwt"
@@ -21,6 +20,7 @@ type UserProcessor struct {
 type UserProcessorInterface interface {
 	Register(context.Context, *user.User) error
 	Authenticate(context.Context, *user.User) error
+	GetUser(context.Context, *user.User) error
 }
 
 func (up UserProcessor) Register(ctx context.Context, u *user.User) error {
@@ -45,9 +45,6 @@ func (up UserProcessor) Authenticate(ctx context.Context, u *user.User) error {
 	}
 
 	err := up.UserStore.GetUser(ctx, &dbUser)
-	fmt.Println("dbUser  form user processor, ", dbUser.Password)
-	fmt.Println("U  form user processor, ", u.Password)
-
 	if err != nil {
 		log.Println(logger, "error in store layer ", err.Error())
 		return err
@@ -72,11 +69,15 @@ func (up UserProcessor) Authenticate(ctx context.Context, u *user.User) error {
 	}
 	u.Token = tokenString
 	// ctx = context.WithValue(ctx, "Authorization", tokenString)
-	log.Println("user processor set context: ", ctx.Value("Authorization"))
+	// log.Println("user processor set context: ", ctx.Value("Authorization"))
 
 	return nil
 }
 
+func (us UserProcessor) GetUser(ctx context.Context, u *user.User) error {
+	return us.UserStore.GetUser(ctx, u)
+
+}
 func NewUserProcessor(userStore UserStoreInterface) UserProcessorInterface {
 	if userStore == nil {
 		userStore = NewUserStore()

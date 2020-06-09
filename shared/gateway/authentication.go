@@ -2,7 +2,6 @@ package gateway
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/hoorinaz/todo-api/pkg/user"
@@ -16,8 +15,8 @@ import (
 )
 
 type Authentication struct {
-	userStore   userservice.UserStoreInterface
-	jwtProvider jwt2.JwtProvider
+	userProcessor userservice.UserProcessorInterface
+	jwtProvider   jwt2.JwtProvider
 }
 
 type AuthenticationProvider interface {
@@ -36,24 +35,20 @@ func (auth *Authentication) AuthMidd(next http.HandlerFunc) http.HandlerFunc {
 		dbUser := user.User{}
 		dbUser.Username = data.Username
 
-		err = auth.userStore.GetUser(ctx, &dbUser)
-		fmt.Println("dbuser from shared authmidd ", dbUser.Password)
+		err = auth.userProcessor.GetUser(ctx, &dbUser)
 		if err != nil {
 			log.Println("user not found", err)
 			errorz.WriteHttpError(w, http.StatusUnauthorized)
 			return
 		}
-
 		ctx = context.WithValue(ctx, shared.UserInContext, dbUser.ID)
 		r = r.WithContext(ctx)
-
-		fmt.Println("first place", ctx.Value(shared.UserInContext))
 		next(w, r)
 	}
 }
 func NewMiddleware() AuthenticationProvider {
 	return &Authentication{
-		jwtProvider: jwt2.NewJwtProvider(),
-		userStore:   userservice.NewUserStore(),
+		jwtProvider:   jwt2.NewJwtProvider(),
+		userProcessor: userservice.NewUserProcessor(nil),
 	}
 }
