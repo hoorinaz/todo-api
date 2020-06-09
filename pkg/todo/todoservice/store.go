@@ -36,7 +36,7 @@ func (ts TodoStore) AddTodo(ctx context.Context, td *todo.Todo) error {
 func (ts TodoStore) GetTodo(ctx context.Context, todo *todo.Todo) error {
 	db := ts.DB
 	if err := db.Table("todos").Where("Id=?", todo.ID).First(&todo).Error; err != nil {
-		log.Println(logger, "there is problem to get todo, error: ", todo.ID , " error= ", err.Error())
+		log.Println(logger, "there is problem to get todo, error: ", todo.ID, " error= ", err.Error())
 		return err
 	}
 	return nil

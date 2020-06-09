@@ -59,7 +59,8 @@ func (tws TodoWebService) ViewTodo(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 	if err = tws.TodoProcessor.ViewTodo(ctx, todo); err != nil {
-		log.Println(logger, "view todo, error in processor layer", err.Error())
+		log.Println(loggerW, err)
+		errorz.WriteHttpError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	fmt.Fprint(w, todo)
@@ -77,6 +78,7 @@ func (tws TodoWebService) EditTodo(w http.ResponseWriter, r *http.Request) {
 
 	if err = tws.TodoProcessor.EditTodo(ctx, td); err != nil {
 		log.Println(loggerW, "error in edit todo", err.Error())
+		errorz.WriteHttpError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	fmt.Fprintf(w, "Todo %v has been changed successfully.", td.ID)
@@ -97,19 +99,10 @@ func (tws TodoWebService) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 		log.Println(logger, "bad request")
 		return
 	}
-	// userId := r.Header.Get(shared.UserFieldInHttpHeader)
-	// u32, err := strconv.ParseUint(userId, 10, 32)
 	ctx := r.Context()
-	// dbTodo := todo.Todo{}
-	// dbTodo.ID = td.ID
-	// err = tws.TodoProcessor.ViewTodo(ctx, &dbTodo)
-	// if uint(u32) != dbTodo.UserID || dbTodo.ID == 0 {
-	// 	log.Println(logger, "wrog user or worng todo")
-	// 	errorz.WriteHttpError(w, http.StatusUnauthorized)
-	// 	return
-	// }
 	if err = tws.TodoProcessor.DeleteTodo(ctx, &td); err != nil {
 		log.Println(logger, "there is an error in processor layer, ", err.Error())
+		errorz.WriteHttpError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
