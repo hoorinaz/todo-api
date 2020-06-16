@@ -10,3 +10,10 @@ message User {
      bool IsRegistered=5;
      string Token=6;
 }   
+service UserService {
+    rpc GetUser (Request) returns (User);
+}
+
+message Request{
+    string username = 1;
+}

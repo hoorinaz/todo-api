@@ -1,10 +1,11 @@
-package proto;
+syntax ="proto3";
+package todo;
 
 message Todo {
     // required uint ID=1;
-    required string Title=1;
-    optional string Dscription=2;
+     string Title=1;
+     string Dscription=2;
     // optional time.Time DueDate=3;
-    optional bool IsDone=4;
+     bool IsDone=4;
    // optional uint UserID=5;
 }
