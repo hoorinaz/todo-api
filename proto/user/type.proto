@@ -3,7 +3,7 @@ syntax="proto3";
 package user;
 
 message User {
-    // required uint ID=1;
+     uint32 ID=1;
      string Username=2;
      string Email=3;
      string Password=4;
