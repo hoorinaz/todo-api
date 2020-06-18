@@ -4,14 +4,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/hoorinaz/todo-api/pkg/user"
-
-	"github.com/hoorinaz/todo-api/pkg/user/userservice"
-	"github.com/hoorinaz/todo-api/shared"
-	"github.com/hoorinaz/todo-api/shared/errorz"
-	jwt2 "github.com/hoorinaz/todo-api/shared/jwt"
+	"google.golang.org/grpc"
 
 	"net/http"
+
+	"github.com/hoorinaz/todo-api/pkg/user/userservice"
+	userProto "github.com/hoorinaz/todo-api/proto/user"
+	"github.com/hoorinaz/todo-api/shared"
+	jwt2 "github.com/hoorinaz/todo-api/shared/jwt"
 )
 
 type Authentication struct {
@@ -32,16 +32,28 @@ func (auth *Authentication) AuthMidd(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		ctx := r.Context()
-		dbUser := user.User{}
-		dbUser.Username = data.Username
+		// dbUser := user.User{}
+		// dbUser.Username = data.Username
 
-		err = auth.userProcessor.GetUser(ctx, &dbUser)
+		// err = auth.userProcessor.GetUser(ctx, &dbUser)
+		// if err != nil {
+		// 	log.Println("user not found", err)
+		// 	errorz.WriteHttpError(w, http.StatusUnauthorized)
+		// 	return
+		// }
+
+		//////////////////// grpc client implementation//////////////////////////////
+
+		conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
 		if err != nil {
-			log.Println("user not found", err)
-			errorz.WriteHttpError(w, http.StatusUnauthorized)
-			return
+			log.Println("server dialing got error", err.Error)
 		}
-		ctx = context.WithValue(ctx, shared.UserInContext, dbUser.ID)
+		defer conn.Close()
+		client := userProto.NewUserServiceClient(conn)
+
+		u, err := client.GetUser(ctx, &userProto.Request{Username: data.Username})
+
+		ctx = context.WithValue(ctx, shared.UserInContext, u.ID)
 		r = r.WithContext(ctx)
 		next(w, r)
 	}
