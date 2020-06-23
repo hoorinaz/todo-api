@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"google.golang.org/grpc"
+	// "google.golang.org/grpc"
 
 	"net/http"
 
@@ -12,6 +12,7 @@ import (
 	userProto "github.com/hoorinaz/todo-api/proto/user"
 	"github.com/hoorinaz/todo-api/shared"
 	jwt2 "github.com/hoorinaz/todo-api/shared/jwt"
+	"google.golang.org/grpc"
 )
 
 type Authentication struct {
