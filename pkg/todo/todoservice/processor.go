@@ -24,11 +24,22 @@ type TodoServiceInterface interface {
 }
 
 func (tp TodoProcessor) AddTodo(ctx context.Context, t *todo.Todo) error {
+	userID, ok := (ctx.Value(shared.UserInContext)).(uint)
+	if ok == false {
+		log.Println(loggerP, "there is an error in assertion userId")
+	}
+
+	t.UserID = userID
+
 	return tp.TodoStore.AddTodo(ctx, t)
 }
 
 func (tp TodoProcessor) ViewTodo(ctx context.Context, t *todo.Todo) error {
-	userID := ctx.Value(shared.UserInContext).(uint)
+	userID, ok := ctx.Value(shared.UserInContext).(uint)
+	if ok == false {
+		log.Println(loggerP, "there is an error in assertion userId")
+
+	}
 	dbTodo := todo.Todo{
 		Model: gorm.Model{ID: t.ID},
 	}
@@ -48,7 +59,10 @@ func (tp TodoProcessor) ViewTodo(ctx context.Context, t *todo.Todo) error {
 }
 
 func (tp TodoProcessor) EditTodo(ctx context.Context, t *todo.Todo) error {
-	userID := ctx.Value(shared.UserInContext).(uint)
+	userID, ok := ctx.Value(shared.UserInContext).(uint)
+	if ok == false {
+		log.Println(loggerP, "there is an error in assertion userId")
+	}
 	dbTodo := todo.Todo{
 		Model: gorm.Model{ID: t.ID},
 	}
@@ -72,7 +86,11 @@ func (tp TodoProcessor) ListTodo(ctx context.Context, t *[]todo.Todo) error {
 }
 
 func (tp TodoProcessor) DeleteTodo(ctx context.Context, t *todo.Todo) error {
-	userID := ctx.Value(shared.UserInContext).(uint)
+	userID, ok := ctx.Value(shared.UserInContext).(uint)
+	if ok == false {
+		log.Println(loggerP, "there is an error in assertion userId")
+
+	}
 	dbTodo := todo.Todo{
 		Model: gorm.Model{ID: t.ID},
 	}

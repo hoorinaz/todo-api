@@ -1,0 +1,11 @@
+syntax ="proto3";
+package todo;
+
+message Todo {
+     uint32 ID=1;
+     string Title=2;
+     string Dscription=3;
+    //  time DueDate=4;
+     bool IsDone=5;
+     uint32 UserID=6;
+}

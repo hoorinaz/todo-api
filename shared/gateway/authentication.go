@@ -2,22 +2,22 @@ package gateway
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	// "google.golang.org/grpc"
 
 	"net/http"
 
-	"github.com/hoorinaz/todo-api/pkg/user/userservice"
-	userProto "github.com/hoorinaz/todo-api/proto/user"
+	usergrpc "github.com/hoorinaz/todo-api/proto/usergrpc"
 	"github.com/hoorinaz/todo-api/shared"
 	jwt2 "github.com/hoorinaz/todo-api/shared/jwt"
 	"google.golang.org/grpc"
 )
 
 type Authentication struct {
-	userProcessor userservice.UserProcessorInterface
-	jwtProvider   jwt2.JwtProvider
+	jwtProvider jwt2.JwtProvider
+	userService usergrpc.UserServiceClient
 }
 
 type AuthenticationProvider interface {
@@ -33,35 +33,28 @@ func (auth *Authentication) AuthMidd(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		ctx := r.Context()
-		// dbUser := user.User{}
-		// dbUser.Username = data.Username
-
-		// err = auth.userProcessor.GetUser(ctx, &dbUser)
-		// if err != nil {
-		// 	log.Println("user not found", err)
-		// 	errorz.WriteHttpError(w, http.StatusUnauthorized)
-		// 	return
-		// }
-
-		//////////////////// grpc client implementation//////////////////////////////
-
-		conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
+		u, err := auth.userService.GetUser(ctx, &usergrpc.Request{Username: data.Username})
 		if err != nil {
-			log.Println("server dialing got error", err.Error)
+			log.Println("auth ", "error to GetUser, ", err.Error())
+			return
 		}
-		defer conn.Close()
-		client := userProto.NewUserServiceClient(conn)
-
-		u, err := client.GetUser(ctx, &userProto.Request{Username: data.Username})
-
-		ctx = context.WithValue(ctx, shared.UserInContext, u.ID)
+		fmt.Println(u)
+		ctx = context.WithValue(ctx, shared.UserInContext, uint(u.ID))
 		r = r.WithContext(ctx)
 		next(w, r)
 	}
 }
+
 func NewMiddleware() AuthenticationProvider {
+	conn, err := grpc.Dial(":8081", grpc.WithInsecure())
+	if err != nil {
+		log.Println("server dialing got error", err.Error())
+	}
+	// defer conn.Close()
+	client := usergrpc.NewUserServiceClient(conn)
+	log.Println("server is dialed...")
 	return &Authentication{
-		jwtProvider:   jwt2.NewJwtProvider(),
-		userProcessor: userservice.NewUserProcessor(nil),
+		jwtProvider: jwt2.NewJwtProvider(),
+		userService: client,
 	}
 }

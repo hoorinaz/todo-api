@@ -5,7 +5,7 @@ import (
 	"github.com/hoorinaz/todo-api/shared/gateway"
 )
 
-func AddTodoService(r *mux.Router) {
+func RegisterTodoService(r *mux.Router) {
 	newMW := gateway.NewMiddleware()
 
 	todoStore := NewTodoStore()

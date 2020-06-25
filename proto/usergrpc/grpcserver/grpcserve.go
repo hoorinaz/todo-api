@@ -6,27 +6,27 @@ import (
 
 	"github.com/hoorinaz/todo-api/pkg/user"
 	"github.com/hoorinaz/todo-api/pkg/user/userservice"
-	userProto "github.com/hoorinaz/todo-api/proto/user"
+	usergrpc "github.com/hoorinaz/todo-api/proto/usergrpc"
 )
 
-//GrpcServer GrpcServer
+//GrpcServer struct
 type GrpcServer struct {
-	db userservice.UserProcessorInterface
+	uProcessor userservice.UserProcessorInterface
 }
 
-//NewGrpcServer NewGrpcServer
+//NewGrpcServer create NewUserProcessor
 func NewGrpcServer() GrpcServer {
 	return GrpcServer{
-		db: userservice.NewUserProcessor(nil),
+		uProcessor: userservice.NewUserProcessor(nil),
 	}
 }
 
 //GetUser GetUser
-func (server *GrpcServer) GetUser(ctx context.Context, r *userProto.Request) (*userProto.User, error) {
+func (server *GrpcServer) GetUser(ctx context.Context, r *usergrpc.Request) (*usergrpc.User, error) {
 	u := &user.User{
 		Username: r.GetUsername(),
 	}
-	err := server.db.GetUser(ctx, u)
+	err := server.uProcessor.GetUser(ctx, u)
 	if err != nil {
 		log.Println("grpcServer: ", "an error occured in server.db.GetUser()", err)
 		return nil, err
@@ -34,8 +34,8 @@ func (server *GrpcServer) GetUser(ctx context.Context, r *userProto.Request) (*u
 	return convertProtoUser(*u), nil
 }
 
-func convertProtoUser(u user.User) *userProto.User {
-	return &userProto.User{
+func convertProtoUser(u user.User) *usergrpc.User {
+	return &usergrpc.User{
 		ID:       uint32(u.ID),
 		Username: u.Username,
 		Email:    u.Email,

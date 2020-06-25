@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/hoorinaz/todo-api/pkg/todo"
-	"github.com/hoorinaz/todo-api/shared"
 	"github.com/hoorinaz/todo-api/shared/errorz"
 )
 
@@ -31,15 +30,12 @@ func (tws TodoWebService) AddTodo(w http.ResponseWriter, r *http.Request) {
 	var todo *todo.Todo
 	ctx := r.Context()
 
-	userId := (ctx.Value(shared.UserInContext)).(uint)
-
 	err := json.NewDecoder(r.Body).Decode(&todo)
 	if err != nil {
 		errorz.WriteHttpError(w, http.StatusBadRequest, "Bad Request")
 		log.Println(logger, "json decode error is: ", err.Error())
 		return
 	}
-	todo.UserID = userId
 
 	if err = tws.TodoProcessor.AddTodo(ctx, todo); err != nil {
 		log.Println(logger, "error in processor layer", err.Error())

@@ -4,24 +4,23 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/hoorinaz/todo-api/pkg/todo"
 	"github.com/hoorinaz/todo-api/pkg/todo/todoservice"
 	"github.com/hoorinaz/todo-api/pkg/user/userservice"
-	userProto "github.com/hoorinaz/todo-api/proto/user"
-	"github.com/hoorinaz/todo-api/proto/user/grpcserver"
-	"google.golang.org/grpc"
-
-	//"github.com/hoorinaz/TodoList/controller/user"
-	//"github.com/hoorinaz/TodoList/models"
-	"github.com/hoorinaz/todo-api/pkg/user"
 
 	"net/http"
 
-	"github.com/hoorinaz/todo-api/shared/connection"
-
 	"github.com/gorilla/mux"
+	"github.com/hoorinaz/todo-api/pkg/user"
+	usergrpc "github.com/hoorinaz/todo-api/proto/usergrpc"
+	"github.com/hoorinaz/todo-api/proto/usergrpc/grpcserver"
+	"github.com/hoorinaz/todo-api/shared/connection"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -34,7 +33,7 @@ func main() {
 	router := mux.NewRouter()
 
 	userservice.RegisterUserService(router)
-	todoservice.AddTodoService(router)
+	todoservice.RegisterTodoService(router)
 
 	fmt.Println("connect to db")
 
@@ -50,18 +49,36 @@ func main() {
 
 	var opts []grpc.ServerOption
 	server := grpc.NewServer(opts...)
-	defer server.Stop()
-	defer lis.Close()
 
 	userServer := grpcserver.NewGrpcServer()
-	userProto.RegisterUserServiceServer(server, &userServer)
 
-	go func(s *grpc.Server) {
-		err = s.Serve(lis)
+	usergrpc.RegisterUserServiceServer(server, &userServer)
+
+	go func() {
+		err = server.Serve(lis)
 		if err != nil {
-			log.Println("serve grpc server got error", err.Error())
+			panic(err.Error())
 		}
-	}(server)
+	}()
 
-	fmt.Println("asghar")
+	sig := WaitSignal()
+
+	//Blocking...
+	log.Println("received signal " + sig.String() + ", exiting...")
+
+	lis.Close()
+	server.Stop()
+}
+
+func WaitSignal() os.Signal {
+	sig := make(chan os.Signal, 1)
+	defer close(sig)
+
+	signal.Notify(sig,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
+	return <-sig
 }
